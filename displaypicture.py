@@ -22,7 +22,7 @@ class ImageViewer:
         
     def _load_image(self):
         """加载图片,处理异常"""
-        img = cv2.imread(str(self.image_path))
+        img = cv2.imdecode(np.fromfile(str(self.image_path), dtype=np.uint8), cv2.IMREAD_COLOR)
         if img is None:
             raise FileNotFoundError(f"无法读取图片: {self.image_path}")
         return img

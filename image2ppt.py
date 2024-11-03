@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from PIL import Image
 from pptx import Presentation
 from pptx.util import Inches
+from displaypicture import ImageViewer
 
 # 加载环境变量
 load_dotenv()
@@ -75,8 +76,30 @@ def crop_images_in_folder(input_folder, output_folder, top_left, bottom_right):
 # 从环境变量读取参数
 input_folder = os.getenv('INPUT_FOLDER')
 output_folder = os.getenv('OUTPUT_FOLDER')
-top_left = (int(os.getenv('TOP_LEFT_X')), int(os.getenv('TOP_LEFT_Y')))
-bottom_right = (int(os.getenv('BOTTOM_RIGHT_X')), int(os.getenv('BOTTOM_RIGHT_Y')))
+
+# 从input_folder中选择一张图片用于预览
+preview_image = None
+for file in os.listdir(input_folder):
+    if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+        preview_image = os.path.join(input_folder, file)
+        print(f"选择预览图片: {preview_image}")
+        break
+
+if preview_image is None:
+    raise FileNotFoundError("在输入文件夹中未找到PNG或JPG格式的图片")
+
+# 使用ImageViewer显示预览图片并获取坐标
+viewer = ImageViewer(preview_image)
+coordinates = viewer.show()
+top_left = coordinates[0]
+bottom_right = coordinates[1]
+
+print(f"选择的裁剪区域:")
+print(f"左上角坐标: {top_left}")
+print(f"右下角坐标: {bottom_right}")
+
+# top_left = (int(os.getenv('TOP_LEFT_X')), int(os.getenv('TOP_LEFT_Y')))
+# bottom_right = (int(os.getenv('BOTTOM_RIGHT_X')), int(os.getenv('BOTTOM_RIGHT_Y')))
 
 # 示例调用
 cropped_images = crop_images_in_folder(input_folder, output_folder, top_left, bottom_right)
