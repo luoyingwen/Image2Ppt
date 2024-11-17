@@ -130,6 +130,23 @@ def crop_images_in_folder(input_folder, output_folder, top_left, bottom_right):
         logger.error(f"批量裁剪图片时出错: {str(e)}")
         raise
 
+def get_preview_image(input_folder):
+    """
+    从input_folder中选择一张图片用于预览。
+    
+    Args:
+        input_folder (str): 输入文件夹路径
+        
+    Returns:
+        str: 预览图片路径
+    """
+    for file in os.listdir(input_folder):
+        if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+            preview_image = os.path.join(input_folder, file)
+            logger.info(f"选择预览图片: {preview_image}")
+            return preview_image
+    raise FileNotFoundError("在输入文件夹中未找到PNG或JPG格式的图片")
+
 def main():
     try:
         # 从环境变量读取参数
@@ -139,16 +156,8 @@ def main():
         if not input_folder or not output_folder:
             raise ValueError("请在.env文件中设置INPUT_FOLDER和OUTPUT_FOLDER")
 
-        # 从input_folder中选择一张图片用于预览
-        preview_image = None
-        for file in os.listdir(input_folder):
-            if file.lower().endswith(('.png', '.jpg', '.jpeg')):
-                preview_image = os.path.join(input_folder, file)
-                logger.info(f"选择预览图片: {preview_image}")
-                break
-
-        if preview_image is None:
-            raise FileNotFoundError("在输入文件夹中未找到PNG或JPG格式的图片")
+        # 获取预览图片
+        preview_image = get_preview_image(input_folder)
 
         # 使用ImageViewer显示预览图片并获取坐标
         viewer = ImageViewer(preview_image)
