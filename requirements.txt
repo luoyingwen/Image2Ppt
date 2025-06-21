@@ -1,0 +1,7 @@
+opencv-python
+matplotlib
+numpy
+pillow
+python-pptx
+python-dotenv
+pathlib

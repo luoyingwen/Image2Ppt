@@ -162,3 +162,4 @@ if __name__ == '__main__':
     print("\n返回的坐标:")
     print(f"左上角坐标: {coordinates[0]}")
     print(f"右下角坐标: {coordinates[1]}")
+    
