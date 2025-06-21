@@ -41,11 +41,10 @@ class ImageViewer:
             # 更新距离最近的点
             if dist1 < dist2:
                 self.point1 = [int(event.xdata), int(event.ydata)]
-                self.text1.set_text(f'点1: ({self.point1[0]}, {self.point1[1]})')
+                self.text1.set_text(f'左上角: ({self.point1[0]}, {self.point1[1]})')
             else:
                 self.point2 = [int(event.xdata), int(event.ydata)]
-                self.text2.set_text(f'点2: ({self.point2[0]}, {self.point2[1]})')
-            
+                self.text2.set_text(f'右下角: ({self.point2[0]}, {self.point2[1]})')
             self.fig.canvas.draw()
     
     def _on_close(self, event):
@@ -60,13 +59,78 @@ class ImageViewer:
     
     def show(self):
         """显示图片并返回选择的坐标"""
-        self.fig, self.ax = plt.subplots(figsize=(12, 8))
+        # 获取屏幕尺寸
+        import tkinter as tk
+        root = tk.Tk()
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight() - 100  # 减去任务栏和标题栏的高度
+        root.destroy()  # 关闭临时窗口
+        
+        # 获取图像尺寸
+        height, width = self.img_rgb.shape[:2]
+        
+        # 计算图像缩放比例，确保图像完全适应屏幕
+        # 考虑到matplotlib图像的边距和其他元素，使用较小的值
+        scale_width = (screen_width * 0.85) / width
+        scale_height = (screen_height * 0.85) / height
+        scale = min(scale_width, scale_height)  # 选择较小的缩放比例，确保完全显示
+        
+        # 计算适当的figsize (英寸)
+        # matplotlib的默认DPI是100，所以需要将像素转换为英寸
+        dpi = 100
+        fig_width = (width * scale) / dpi
+        fig_height = (height * scale) / dpi
+        
+        print(f"屏幕尺寸: {screen_width}x{screen_height}，图片尺寸: {width}x{height}")
+        print(f"使用缩放比例: {scale:.2f}，图形尺寸: {fig_width:.2f}x{fig_height:.2f}英寸")
+        
+        # 创建图形，使用计算出的尺寸
+        self.fig, self.ax = plt.subplots(figsize=(fig_width, fig_height))
         self.ax.imshow(self.img_rgb)
         self.ax.axis('off')
         
         # 设置第二个点的初始坐标为图片尺寸
-        height, width = self.img_rgb.shape[:2]
         self.point2 = [width, height]
+        
+        # 设置窗口最大化
+        try:
+            # 获取当前图形的管理器
+            mng = plt.get_current_fig_manager()
+            # 获取matplotlib使用的后端
+            backend = plt.get_backend().lower()
+            print(f"当前使用的Matplotlib后端: {backend}")
+            
+            # 在Windows下使用不同方法最大化窗口
+            if 'tk' in backend:  # TkAgg后端
+                # 获取Tk的根窗口然后最大化
+                root = mng.window.winfo_toplevel()
+                # 以下是根据不同系统最大化窗口的通用方法
+                # Windows系统
+                root.state('zoomed')  # Windows特定
+                print("已使用Tk后端的zoomed状态最大化窗口")
+            elif 'qt' in backend:  # Qt后端
+                mng.window.showMaximized()
+                print("已使用Qt后端的showMaximized方法最大化窗口")
+            elif hasattr(mng, 'frame'):  # WxAgg后端
+                mng.frame.Maximize(True)
+                print("已使用WxAgg后端的Maximize方法最大化窗口")
+            elif hasattr(mng, 'resize'):  # 通用方法
+                # 获取屏幕尺寸并设置窗口大小
+                import tkinter as tk
+                root = tk.Tk()
+                width = root.winfo_screenwidth()
+                height = root.winfo_screenheight()
+                root.withdraw()  # 不显示这个临时窗口
+                mng.resize(width, height)
+                print(f"已将窗口大小调整为屏幕尺寸: {width}x{height}")
+            elif hasattr(mng, 'full_screen_toggle'):
+                mng.full_screen_toggle()
+                print("已切换全屏模式")
+            else:
+                print(f"未知的后端 {backend}，请手动最大化窗口")
+        except Exception as e:
+            print(f"无法最大化窗口 (使用后端: {backend}): {str(e)}，请手动最大化")
+            # 错误不影响主要功能
         
         # 添加文本框
         # 在图像外部添加文本框
